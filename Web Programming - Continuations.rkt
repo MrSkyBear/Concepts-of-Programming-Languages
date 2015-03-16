@@ -1,71 +1,78 @@
 #lang web-server/insta
 
-(define questions (list ""
-                        "What is the best controller for shooters?"
-                        "What is the best gate?"
-                        "Do you prefer horizontal or vertical scrolling?"
-                        "What is the best horizontal shooter?"
-                        "Which is the better developer?" 
-                        "What is Cave’s best release?"
-                        "What is Treasure’s best release?"))
+(define questions 
+  (list
+   "What is the best controller for shooters?"
+   "What is the best gate?"
+   "Do you prefer horizontal or vertical scrolling?"
+   "What is the best horizontal shooter?"
+   "Which is the better developer?" 
+   "What is Cave’s best release?"
+   "What is Treasure’s best release?"))
 
-
-(define option1 (list '(input ([name "answer"] [type "radio"] [value "TEST1"]) "TEXT1 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST2"]) "TEXT2 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST3"]) "TEXT3 HERE")))
-
-(define option2 (list '(input ([name "answer"] [type "radio"] [value "TEST1"]) "TEXT1 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST2"]) "TEXT2 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST3"]) "TEXT3 HERE")))
-
-(define option3 (list '(input ([name "answer"] [type "radio"] [value "TEST1"]) "TEXT1 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST2"]) "TEXT2 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST3"]) "TEXT3 HERE")))
-
-(define option4 (list '(input ([name "answer"] [type "radio"] [value "TEST1"]) "TEXT1 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST2"]) "TEXT2 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST3"]) "TEXT3 HERE")))
-
-(define option5 (list '(input ([name "answer"] [type "radio"] [value "TEST1"]) "TEXT1 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST2"]) "TEXT2 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST3"]) "TEXT3 HERE")))
-
-(define option6 (list '(input ([name "answer"] [type "radio"] [value "TEST1"]) "TEXT1 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST2"]) "TEXT2 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST3"]) "TEXT3 HERE")))
-
-(define option7 (list '(input ([name "answer"] [type "radio"] [value "TEST1"]) "TEXT1 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST2"]) "TEXT2 HERE")
-                      '(input ([name "answer"] [type "radio"] [value "TEST3"]) "TEXT3 HERE")))
-
-(define option-list (list option1 option2 option3 option4 option5 option6 option7))
+(define option-lists 
+  (list
+   (list "Arcade Stick" "Gamepad" "Keyboard") 
+   (list "Circular" "Octangonal" "Square")
+   (list "Horizontal" "Vertical")
+   (list "Gradius V" "Sexy Parodius" "Border Down" "Deathsmiles" "other")
+   (list "Cave" "Treasure")
+   (list "Dodonpachi" "Ketsui kizuna jigoku tachi" "Mushihimesama Futari 1.5" "other")
+   (list "Radiant Silvergun" "Sin and Punishment" "Ikaruga" "Sin and Punishment: Star Successor" "other")))
 
 (define (start initial-request)
-  (local [(define result1 (get-answer (list-ref questions 1) 1))
-          (define result2 (get-answer (list-ref questions 2) 2))
-          (define result3 (get-answer (list-ref questions 3) 3))
-          (define result4 (get-answer (list-ref questions 4) 4))
-          (define result5 (get-answer (list-ref questions 5) 5))
-          (define result6 (get-answer (list-ref questions 6) 6))
-          (define result7 (get-answer (list-ref questions 7) 7))]
-    (send/back (response/xexpr `(html (head (title "Your result"))
-                                      (body (p ,result1
-                                               )))))))
+  (local [(define answer1 (get-answer (list-ref questions 0) (list-ref option-lists 0)))
+          (define answer2 (if (string=? answer1 "Arcade Stick")
+                              (get-answer (list-ref questions 1) (list-ref option-lists 1))
+                              ""))
+          (define answer3 (get-answer (list-ref questions 2) (list-ref option-lists 2)))
+          (define answer4 (if (string=? answer3 "Horizontal")
+                              (get-answer (list-ref questions 3) (list-ref option-lists 3))
+                              ""))
+          (define answer5 (if (string=? answer4 "Vertical")
+                              (get-answer (list-ref questions 4) (list-ref option-lists 4))
+                              ""))
+          (define answer6 (if (string=? answer5 "Cave")
+                              (get-answer (list-ref questions 5) (list-ref option-lists 5))
+                              ""))
+          (define answer7 (if (and (string=? answer3 "Vertical")
+                                   (string=? answer5 "Treasure"))
+                                   (get-answer (list-ref questions 6) (list-ref option-lists 6))
+                                   ""))
+          (define answers (list answer1 answer2 answer3 answer4 answer5 answer6 answer7))]
+    (send/back (response/xexpr 
+                `(html (head (title "Results"))
+                       (body 
+                        (h1 "Your lame results")
+                        (div
+                          ,@(map render-answer questions answers))))))))
 
+(define (render-answer question answer)
+  (if (string=? answer "")
+      ""
+      `(ul ,question
+        (li ,answer))))
 
+(define (render-option option)
+  (if (string=? option "other")
+      `(div (input ([name "answer"] [type "radio"] [value ,option]) ,option
+                   (input ([name "customtxt"] [type "text"]))))
+      `(div (input ([name "answer"] [type "radio"] [value ,option]) ,option))))
 
-(define (get-answer prompt)
-  (local [(define req (send/suspend (lambda (k-url)
-                                      (response/xexpr 
-                                       `(html (head (title "Question x"))
-                                              (body
-                                               (form ([action ,k-url])
-                                                     ,prompt
-                                                     (br)
-                                                     ,@(map (lambda (x) x) a1)
-                                                     (input ([type "submit"])))))))))
+(define (get-answer prompt options)
+  (local [(define req 
+            (send/suspend 
+             (lambda (k-url)
+               (response/xexpr 
+                `(html (head (title "Lame Questions"))
+                       (body
+                        (form ([action ,k-url])
+                              ,prompt
+                              (br)
+                              (div
+                               ,@(map render-option options))
+                              (br)
+                              (input ([type "submit"])))))))))
           (define bindings (request-bindings req))
           (define value (extract-binding/single 'answer bindings))]
-    value ; return the value as a number
-    ))
-
+    value))
