@@ -48,10 +48,6 @@
                          ,@(map render-answer questions answers))))))))
 
 
-
-
-
-
 (define (render-answer question answer)
   (if (string=? answer "")
       ""
