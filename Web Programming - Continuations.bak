@@ -15,11 +15,10 @@
    (list "Arcade Stick" "Gamepad" "Keyboard") 
    (list "Circular" "Octangonal" "Square")
    (list "Horizontal" "Vertical")
-   (list "Gradius V" "Sexy Parodius" "Border Down" "Deathsmiles" "Other")
+   (list "Gradius V" "Sexy Parodius" "Border Down" "Deathsmiles" "other")
    (list "Cave" "Treasure")
-   (list "Dodonpachi" "Ketsui kizuna jigoku tachi" "Mushihimesama Futari 1.5" "Other")
-   (list "Radiant Silvergun" "Sin and Punishment" "Ikaruga" "Sin and Punishment: Star Successor" "Other")))
-
+   (list "Dodonpachi" "Ketsui kizuna jigoku tachi" "Mushihimesama Futari 1.5" "other")
+   (list "Radiant Silvergun" "Sin and Punishment" "Ikaruga" "Sin and Punishment: Star Successor" "other")))
 
 (define (start initial-request)
   (local [(define answer1 (get-answer (list-ref questions 0) (list-ref option-lists 0)))
@@ -30,36 +29,32 @@
           (define answer4 (if (string=? answer3 "Horizontal")
                               (get-answer (list-ref questions 3) (list-ref option-lists 3))
                               ""))
-          (define answer5 (if (string=? answer3 "Vertical")
+          (define answer5 (if (string=? answer4 "Vertical")
                               (get-answer (list-ref questions 4) (list-ref option-lists 4))
                               ""))
           (define answer6 (if (string=? answer5 "Cave")
                               (get-answer (list-ref questions 5) (list-ref option-lists 5))
                               ""))
-          (define answer7 (if (string=? answer5 "Treasure")
-                              (get-answer (list-ref questions 6) (list-ref option-lists 6))
-                              ""))
+          (define answer7 (if (and (string=? answer3 "Vertical")
+                                   (string=? answer5 "Treasure"))
+                                   (get-answer (list-ref questions 6) (list-ref option-lists 6))
+                                   ""))
           (define answers (list answer1 answer2 answer3 answer4 answer5 answer6 answer7))]
     (send/back (response/xexpr 
                 `(html (head (title "Results"))
                        (body 
-                        (h1 "Your results")
+                        (h1 "Your lame results")
                         (div
-                         ,@(map render-answer questions answers))))))))
-
-
-
-
-
+                          ,@(map render-answer questions answers))))))))
 
 (define (render-answer question answer)
   (if (string=? answer "")
       ""
       `(ul ,question
-           (li ,answer))))
+        (li ,answer))))
 
 (define (render-option option)
-  (if (string=? option "Other")
+  (if (string=? option "other")
       `(div (input ([name "answer"] [type "radio"] [value ,option]) ,option
                    (input ([name "customtxt"] [type "text"]))))
       `(div (input ([name "answer"] [type "radio"] [value ,option]) ,option))))
@@ -69,7 +64,7 @@
             (send/suspend 
              (lambda (k-url)
                (response/xexpr 
-                `(html (head (title "Questions"))
+                `(html (head (title "Lame Questions"))
                        (body
                         (form ([action ,k-url])
                               ,prompt
@@ -79,11 +74,5 @@
                               (br)
                               (input ([type "submit"])))))))))
           (define bindings (request-bindings req))
-          (define value (if (empty? bindings)
-                            (error 'get-answer "User did not make a selection")
-                            (if (and (exists-binding? 'customtxt bindings)
-                                 (not (string=? "" (extract-binding/single 'customtxt bindings)))
-                                 (string=? "Other" (extract-binding/single 'answer bindings)))
-                            (extract-binding/single 'customtxt bindings)
-                            (extract-binding/single 'answer bindings))))]
+          (define value (extract-binding/single 'answer bindings))]
     value))
